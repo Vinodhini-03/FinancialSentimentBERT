@@ -1,8 +1,0 @@
-{
-    "VOCAB_SIZE": 6306,
-    "MAX_SEQUENCE_LENGTH": 32,
-    "BATCH_SIZE": 64,
-    "NUM_CLASSES": 3,
-    "PAD_IDX": 0,
-    "UNK_IDX": 1
-}
