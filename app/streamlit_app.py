@@ -227,11 +227,25 @@ class SentimentGRU(nn.Module):
         return self.fc(hidden)
 
 # ─── Load Artifacts ──────────────────────────────────────────────────────────
+HF_REPO = "Vin003/FinancialSentimentBERT"
+
+def get_model_path(filename):
+    """Download from HuggingFace if not available locally."""
+    local_path = os.path.join(MODEL_DIR, filename)
+    if os.path.exists(local_path):
+        return local_path
+    try:
+        from huggingface_hub import hf_hub_download
+        return hf_hub_download(repo_id=HF_REPO, filename=filename)
+    except Exception as e:
+        st.error(f"❌ Could not load {filename}: {e}")
+        st.stop()
+
 @st.cache_resource(show_spinner=False)
 def load_vocab_config():
-    with open(os.path.join(MODEL_DIR, 'word2idx.pkl'), 'rb') as f:
+    with open(get_model_path('word2idx.pkl'), 'rb') as f:
         word2idx = pickle.load(f)
-    with open(os.path.join(MODEL_DIR, 'config.json'), 'r') as f:
+    with open(get_model_path('config.json'), 'r') as f:
         config = json.load(f)
     return word2idx, config
 
@@ -239,7 +253,7 @@ def load_vocab_config():
 def load_rnn(config):
     model = SentimentRNN(vocab_size=config['VOCAB_SIZE'], embed_dim=128, hidden_dim=256,
                          num_classes=3, num_layers=2, dropout=0.3, pad_idx=config['PAD_IDX'])
-    model.load_state_dict(torch.load(os.path.join(MODEL_DIR, 'SimpleRNN_best.pt'), map_location='cpu'))
+    model.load_state_dict(torch.load(get_model_path('SimpleRNN_best.pt'), map_location='cpu'))
     model.eval()
     return model
 
@@ -247,7 +261,7 @@ def load_rnn(config):
 def load_lstm(config):
     model = SentimentLSTM(vocab_size=config['VOCAB_SIZE'], embed_dim=128, hidden_dim=256,
                           num_classes=3, num_layers=2, dropout=0.3, pad_idx=config['PAD_IDX'])
-    model.load_state_dict(torch.load(os.path.join(MODEL_DIR, 'LSTM_best.pt'), map_location='cpu'))
+    model.load_state_dict(torch.load(get_model_path('LSTM_best.pt'), map_location='cpu'))
     model.eval()
     return model
 
@@ -255,7 +269,7 @@ def load_lstm(config):
 def load_gru(config):
     model = SentimentGRU(vocab_size=config['VOCAB_SIZE'], embed_dim=128, hidden_dim=256,
                          num_classes=3, num_layers=2, dropout=0.3, pad_idx=config['PAD_IDX'])
-    model.load_state_dict(torch.load(os.path.join(MODEL_DIR, 'GRU_best.pt'), map_location='cpu'))
+    model.load_state_dict(torch.load(get_model_path('GRU_best.pt'), map_location='cpu'))
     model.eval()
     return model
 
@@ -264,7 +278,7 @@ def load_finbert():
     tokenizer = AutoTokenizer.from_pretrained('ProsusAI/finbert')
     model     = AutoModelForSequenceClassification.from_pretrained(
         'ProsusAI/finbert', num_labels=3, ignore_mismatched_sizes=True)
-    model.load_state_dict(torch.load(os.path.join(MODEL_DIR, 'FinBERT_best.pt'), map_location='cpu'))
+    model.load_state_dict(torch.load(get_model_path('FinBERT_best.pt'), map_location='cpu'))
     model.eval()
     return model, tokenizer
 
